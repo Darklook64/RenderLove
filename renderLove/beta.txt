@@ -1,0 +1,38 @@
+
+Que hacer para el proyecto del jueves agenda: programada...
+
+
+.-Diseño de la base de datos---Fixed;
+.-Creacion del proyecto---Fixed;
+
+    MARTES 03
+.-Modelado del software---  MARTES 03 ----FIXED  ;
+.-Conexion con Base de datos--- MARTES 03;
+.-Implementar clases ---  MARTES 03;
+.-TRATAR CONEXION CON GAME MAKER Y MYSQL---MARTES 03;
+.-Ilustrar una chica ---- MARTES 03 Temprano;
+.-Implementar la clase Data---- ;
+    .-METODOS PENSADOS HASTA EL MOMENTO(EDITABLE)
+            -METODO  GetChica(int id de la chica) //Selecciona la chica que solicitamos por id----FIXED
+            -METODO  GetPassion(int id de la chica) //Seleciona el medidor por id de la chica----FIXED
+            -METODO  GetAtraccion(int id de la chica)// Seleciona el medidor por id de la chica----FIXED
+            -METODO  GetDiversion(int id de la chica)  // Seleciona el medidor por id de la chica----FIXED
+           
+            -METODO  ActualizarPassion(int id de la chica,int valor de cuanto se actualiza)//Este sera un query que analiza cuanto sera lo que actualizara 
+                                             // el medidor de passion----FIXED
+            -METODO ActualizarAtraccion(int id de la chica,int valor de cuanto se actualiza)//Este sera un query al igual que el anterior----FIXED
+            -METODO ActualizarDiversion(int id de la chica)//Este sera un query al igual que el anterior----FIXED
+            
+            -METODO EscoguerPreguta(int id de la chica,int idPregunta,String pregunta)// Dependiendo del id de la chica la preguntas que ella hara----FIXED
+            - -METODO  CargarSprites (String carpeta, int numero Animacion) //Carga los sprite y le asigna un int a cada Animacion p----FIXED
+                                        //Este metodo sera cargado por una url a la cual se le concatenan estas variables
+                                        //REALIZAR EN LA TARDE...
+
+            
+
+.-  MIERCOLES 04
+    .-Realizar APP (OPCIONAL:: SI ESTA CONEXION CON GAME MAKER HECHA....HACERLO HAY TAMBIEN)
+    .-
+
+.- JUEVES 05 PRESENTAR AVANCE
+
