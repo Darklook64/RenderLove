@@ -6,6 +6,8 @@ import com.sun.glass.events.KeyEvent;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -17,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -36,6 +39,7 @@ public class app extends javax.swing.JFrame {
     private int nivel;
     private int  cont;
     private String strPalabra;
+    private GraphicsDevice grafica;
 
 
     private void isEnableInteraction(int habilitado) {
@@ -123,6 +127,20 @@ public class app extends javax.swing.JFrame {
             Logger.getLogger(app.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+     private void quitarAtraccion(int atraccion) {
+        try {
+
+            atrac = d.getAtracion(1);
+            if (atrac.getAtraccion() > 0) {
+                atrac.setAtraccion(atrac.getAtraccion() - atraccion);
+                d.updateAtracion(atrac);
+                cargarEstadoChica(atrac.getIdChica());
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(app.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     private void quitarPassion(int pasion) {
         try {
@@ -169,13 +187,7 @@ public class app extends javax.swing.JFrame {
         }
     }
 
-    private Icon cargarBackground(String ruta) {
-        String path = ruta;
-        URL url = this.getClass().getResource(path);
-        Image fondo = new ImageIcon(url).getImage().getScaledInstance(lblBackWall.getWidth(),lblBackWall.getHeight(), Image.SCALE_DEFAULT);
-        ImageIcon wallground = new ImageIcon(fondo);
-        return wallground;
-    }
+   
 
     private void limipiarBotones() {
        btnRespuesta01.setText("");
@@ -184,12 +196,21 @@ public class app extends javax.swing.JFrame {
     }
 
     private void activarMiniJuegoAbie() {
-            
+           
             pMiniJuego01.setBounds(0, 0,489,300);
             txtMgIngresar.setEnabled(false);
             txtMgIngresar.requestFocus();
             pMiniJuego01.setLocationRelativeTo(null);
             pMiniJuego01.setVisible(true);
+            lblSprite02.setIcon(cargarSprite2(9,lblSprite02));
+        
+            
+            if (nivel<50){
+                lblNivelMiniJuego.setText("Lv 1");
+            }else {
+            
+                lblNivelMiniJuego.setText("Lv 2");
+            }
       
             IntroduccionMiniJuego();
            
@@ -203,6 +224,7 @@ public class app extends javax.swing.JFrame {
             @Override
             public void run() {
                 try {
+                    
                     enviarDialogo("Muy bien empezaremos con el juego", txtMgDialogo02);
                     Thread.sleep(5000);
                     enviarDialogo("El juego consiste en lo siguiente", txtMgDialogo02);
@@ -216,7 +238,7 @@ public class app extends javax.swing.JFrame {
                     enviarDialogo("El juego comienza en", txtMgDialogo02);
                     Thread.sleep(3000);
                     enviarDialogo("3", txtMgDialogo02);
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                     enviarDialogo("2", txtMgDialogo02);
                     Thread.sleep(1000);
                     enviarDialogo("1", txtMgDialogo02);
@@ -224,33 +246,145 @@ public class app extends javax.swing.JFrame {
                     enviarDialogo("YA!!", txtMgDialogo02);
                     Thread.sleep(1000);
                     
-                    empezarJuego(nivel);
+                    empezarJuego();
 
                 } catch (InterruptedException ex) {
                     Logger.getLogger(app.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
 
-            public void empezarJuego(int nivel) {
+            public void empezarJuego() {
                 AbieGame palabra = null;
-                cont=10;
-                if (nivel < 50) {
-                    if (cont==10){
+                cont=0;
                         palabra = d.darPalabra();
                         strPalabra=palabra.getPalabra();
                         enviarDialogo(palabra.getPalabra(), txtMgDialogo02);
                         txtMgIngresar.setEnabled(true);
+                        cuentaRegresivaMiniGame(500, 1);
                         
                         
-                    
-                    
-                    }
-                    
 
-                }
             }
         }).start();
 
+    }
+    
+    public void cuentaRegresivaMiniGame(int segundos,int cuanto_se_resta){
+ 
+        int contador=barTime.getValue();
+        
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(contador!=0){
+                    try {
+                        //SI es que la cuenta regresiva llega a 0
+                        if (barTime.getValue()==0){
+                            enviarDialogo("Basta!!!!", txtMgDialogo02);
+                            txtMgIngresar.setEnabled(false);
+                            txtMgIngresar.setText("");
+                            Thread.sleep(3000);
+                            enviarDialogo("Que aburrido ha sido!", txtMgDialogo02);
+                            Thread.sleep(3000);
+                            enviarDialogo("no eres lo que yo me esperaba", txtMgDialogo02);
+                            Thread.sleep(4000);
+                            enviarDialogo("nos veremos luego", txtMgDialogo02);
+                            Thread.sleep(3000);
+                            enviarDialogo("Adios", txtMgDialogo02);
+                            Thread.sleep(3000);
+                            quitarAtraccion(30);
+                            pMiniJuego01.setVisible(false);
+                            barTime.setValue(100);
+                            break;    
+                        
+                        }
+                        //Se encarga de frenar el ciclo si esque se termina el
+                        //juego :c
+                       
+                        barTime.setValue(barTime.getValue()-cuanto_se_resta);
+                        System.out.println(barTime.getValue()-cuanto_se_resta);
+                        Thread.sleep(segundos);
+                         if (nivel < 50) {
+                            if(cont>10){
+                                break;
+                            }
+
+                         } else if (nivel > 50) {
+                            if(cont>20){
+                                break;
+                            }
+                         }
+                        
+                        
+                        
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(app.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                }
+            }
+        }).start();
+            
+            
+    
+    }
+
+    private void jugarMiniJuego(int limite) {
+        AbieGame palabra = null;
+        new Thread (new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    lblSprite02.setIcon(cargarSprite2(10,lblSprite02));
+                    Thread.sleep(2000);
+                    lblSprite02.setIcon(cargarSprite2(9,lblSprite02));
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(app.class.getName()).log(Level.SEVERE, null, ex);
+                }
+               
+            }
+        }).start();
+        if (cont <= limite) {
+            palabra = d.darPalabra();
+            strPalabra = palabra.getPalabra();
+            enviarDialogo(palabra.getPalabra(), txtMgDialogo02);
+            txtMgIngresar.setEnabled(true);
+            cont++;
+
+        }else{
+            
+            new Thread (new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        enviarDialogo("Basta!!!", txtMgDialogo02);
+                        Thread.sleep(3000);
+                        enviarDialogo("Ha sido muy divertido!!!", txtMgDialogo02);
+                        Thread.sleep(3000);
+                        enviarDialogo("Lo has hecho muy bien", txtMgDialogo02);
+                        Thread.sleep(3000);
+                        enviarDialogo("bueno, te veo luego", txtMgDialogo02);
+                        Thread.sleep(3000);
+                        enviarDialogo("adios!!!", txtMgDialogo02);
+                        darAtraccion(40);
+                        Thread.sleep(3000);
+                        
+                        pMiniJuego01.setVisible(false);
+                        barTime.setValue(100);
+                        
+                        
+                        
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(app.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }).start();
+            
+            txtMgIngresar.setEnabled(false);
+            txtMgIngresar.setText("");
+            
+            
+        }
     }
 
   
@@ -258,7 +392,7 @@ public class app extends javax.swing.JFrame {
     public class BackgroundAbie extends javax.swing.JPanel {
 
         public BackgroundAbie() {
-            this.setSize(800, 600); //se selecciona el tamaño del panel
+            this.setSize(1600, 900); //se selecciona el tamaño del panel
         }
 
 //Se crea un método cuyo parámetro debe ser un objeto Graphics
@@ -296,7 +430,11 @@ public class app extends javax.swing.JFrame {
             cargarEstadoChica(1);
             txtDialogo.setEnabled(false);
             lblSprite.setIcon(cargarSprite(1));
-            lblBackWall.setIcon(cargarBackground("g/plantilla.png"));
+  
+            grafica=GraphicsEnvironment
+                    .getLocalGraphicsEnvironment()
+                    .getDefaultScreenDevice();
+
             
 
 
@@ -319,31 +457,30 @@ public class app extends javax.swing.JFrame {
         txtMgDialogo02 = new javax.swing.JTextField();
         txtMgIngresar = new javax.swing.JTextField();
         barTime = new javax.swing.JProgressBar();
+        lblNivelMiniJuego = new javax.swing.JLabel();
         pBackground = new javax.swing.JPanel();
         lblSprite = new javax.swing.JLabel();
-        lblEdad = new javax.swing.JLabel();
-        lblNombre1 = new javax.swing.JLabel();
-        lblOcupacion = new javax.swing.JLabel();
-        pRespuestas = new javax.swing.JPanel();
-        btnRespuesta03 = new javax.swing.JButton();
+        barPasion = new javax.swing.JProgressBar();
+        barAtraccion = new javax.swing.JProgressBar();
+        barDiversion = new javax.swing.JProgressBar();
+        btnInteractuar = new javax.swing.JButton();
+        btnJugar = new javax.swing.JButton();
         btnRespuesta01 = new javax.swing.JButton();
         btnRespuesta02 = new javax.swing.JButton();
-        barPasion = new javax.swing.JProgressBar();
-        lblNombre2 = new javax.swing.JLabel();
-        barAtraccion = new javax.swing.JProgressBar();
-        lblNombre3 = new javax.swing.JLabel();
-        barDiversion = new javax.swing.JProgressBar();
-        lblNombre4 = new javax.swing.JLabel();
+        btnRespuesta03 = new javax.swing.JButton();
+        btnDarDiversion = new javax.swing.JButton();
         btnAtraccion = new javax.swing.JButton();
         btnPassion = new javax.swing.JButton();
         btnDiversion = new javax.swing.JButton();
-        btnInteractuar = new javax.swing.JButton();
         txtDialogo = new javax.swing.JTextField();
-        btnDarDiversion = new javax.swing.JButton();
-        lblBackWall = new javax.swing.JLabel();
-        btnJugar = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
+        lblNombre1 = new javax.swing.JLabel();
+        lblEdad = new javax.swing.JLabel();
+        lblOcupacion = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
+        jIFullScreen = new javax.swing.JMenuItem();
+        jINormalScreen = new javax.swing.JMenuItem();
         jmSalir = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
@@ -366,6 +503,10 @@ public class app extends javax.swing.JFrame {
         barTime.setForeground(new java.awt.Color(204, 0, 0));
         barTime.setValue(100);
 
+        lblNivelMiniJuego.setFont(new java.awt.Font("Trajan Pro 3", 1, 18)); // NOI18N
+        lblNivelMiniJuego.setForeground(new java.awt.Color(255, 0, 153));
+        lblNivelMiniJuego.setText("Nivel");
+
         javax.swing.GroupLayout pMiniJuego01Layout = new javax.swing.GroupLayout(pMiniJuego01.getContentPane());
         pMiniJuego01.getContentPane().setLayout(pMiniJuego01Layout);
         pMiniJuego01Layout.setHorizontalGroup(
@@ -373,27 +514,32 @@ public class app extends javax.swing.JFrame {
             .addGroup(pMiniJuego01Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(pMiniJuego01Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(pMiniJuego01Layout.createSequentialGroup()
-                        .addComponent(txtMgDialogo02, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 39, Short.MAX_VALUE)
-                        .addComponent(lblSprite02, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(20, 20, 20))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pMiniJuego01Layout.createSequentialGroup()
                         .addGroup(pMiniJuego01Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(barTime, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(txtMgIngresar))
-                        .addContainerGap())))
+                        .addContainerGap())
+                    .addGroup(pMiniJuego01Layout.createSequentialGroup()
+                        .addGroup(pMiniJuego01Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(pMiniJuego01Layout.createSequentialGroup()
+                                .addComponent(txtMgDialogo02, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(pMiniJuego01Layout.createSequentialGroup()
+                                .addGap(0, 147, Short.MAX_VALUE)
+                                .addComponent(lblNivelMiniJuego, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(109, 109, 109)))
+                        .addComponent(lblSprite02, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(20, 20, 20))))
         );
         pMiniJuego01Layout.setVerticalGroup(
             pMiniJuego01Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pMiniJuego01Layout.createSequentialGroup()
                 .addGroup(pMiniJuego01Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(pMiniJuego01Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(lblSprite02, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(pMiniJuego01Layout.createSequentialGroup()
-                        .addGap(33, 33, 33)
-                        .addComponent(txtMgDialogo02, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(lblNivelMiniJuego, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtMgDialogo02, javax.swing.GroupLayout.PREFERRED_SIZE, 88, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(lblSprite02, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtMgIngresar, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -403,7 +549,7 @@ public class app extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Render Love");
-        setResizable(false);
+        setPreferredSize(new java.awt.Dimension(779, 750));
 
         pBackground.setBackground(new java.awt.Color(153, 255, 153));
 
@@ -416,49 +562,35 @@ public class app extends javax.swing.JFrame {
             }
         });
 
-        javax.swing.GroupLayout pBackgroundLayout = new javax.swing.GroupLayout(pBackground);
-        pBackground.setLayout(pBackgroundLayout);
-        pBackgroundLayout.setHorizontalGroup(
-            pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pBackgroundLayout.createSequentialGroup()
-                .addGap(131, 131, 131)
-                .addComponent(lblSprite, javax.swing.GroupLayout.PREFERRED_SIZE, 212, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(131, Short.MAX_VALUE))
-        );
-        pBackgroundLayout.setVerticalGroup(
-            pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pBackgroundLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(lblSprite, javax.swing.GroupLayout.DEFAULT_SIZE, 423, Short.MAX_VALUE))
-        );
+        barPasion.setBackground(new java.awt.Color(255, 102, 255));
+        barPasion.setForeground(new java.awt.Color(153, 0, 153));
+        barPasion.setValue(20);
+        barPasion.setString("Pasión");
 
-        lblEdad.setFont(new java.awt.Font("Trajan Pro 3", 3, 18)); // NOI18N
-        lblEdad.setForeground(new java.awt.Color(255, 204, 255));
-        lblEdad.setText("Edad:");
+        barAtraccion.setBackground(new java.awt.Color(0, 153, 255));
+        barAtraccion.setForeground(new java.awt.Color(102, 204, 255));
+        barAtraccion.setValue(20);
+        barAtraccion.setString("Atracción");
 
-        lblNombre1.setFont(new java.awt.Font("Trajan Pro 3", 3, 18)); // NOI18N
-        lblNombre1.setForeground(new java.awt.Color(255, 204, 255));
-        lblNombre1.setText("Nombre:");
+        barDiversion.setBackground(new java.awt.Color(255, 153, 51));
+        barDiversion.setForeground(new java.awt.Color(255, 102, 51));
+        barDiversion.setMaximum(10);
+        barDiversion.setString("Diversión");
 
-        lblOcupacion.setFont(new java.awt.Font("Trajan Pro 3", 3, 18)); // NOI18N
-        lblOcupacion.setForeground(new java.awt.Color(255, 204, 255));
-        lblOcupacion.setText("Ocupacion:");
-
-        pRespuestas.setBackground(new java.awt.Color(153, 204, 255));
-        pRespuestas.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                pRespuestasMouseEntered(evt);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                pRespuestasMouseExited(evt);
+        btnInteractuar.setBackground(new java.awt.Color(255, 102, 255));
+        btnInteractuar.setForeground(new java.awt.Color(102, 0, 102));
+        btnInteractuar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/cl/jRenderLove/app/g/talk.png"))); // NOI18N
+        btnInteractuar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnInteractuarActionPerformed(evt);
             }
         });
 
-        btnRespuesta03.setBackground(new java.awt.Color(153, 255, 255));
-        btnRespuesta03.setFont(new java.awt.Font("Trajan Pro 3", 2, 12)); // NOI18N
-        btnRespuesta03.addActionListener(new java.awt.event.ActionListener() {
+        btnJugar.setBackground(new java.awt.Color(255, 102, 102));
+        btnJugar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/cl/jRenderLove/app/g/heart.png"))); // NOI18N
+        btnJugar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnRespuesta03ActionPerformed(evt);
+                btnJugarActionPerformed(evt);
             }
         });
 
@@ -479,58 +611,66 @@ public class app extends javax.swing.JFrame {
             }
         });
 
-        javax.swing.GroupLayout pRespuestasLayout = new javax.swing.GroupLayout(pRespuestas);
-        pRespuestas.setLayout(pRespuestasLayout);
-        pRespuestasLayout.setHorizontalGroup(
-            pRespuestasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(pRespuestasLayout.createSequentialGroup()
-                .addGap(21, 21, 21)
-                .addGroup(pRespuestasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(btnRespuesta02, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnRespuesta01, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 312, Short.MAX_VALUE)
-                    .addComponent(btnRespuesta03, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(16, Short.MAX_VALUE))
+        btnRespuesta03.setBackground(new java.awt.Color(153, 255, 255));
+        btnRespuesta03.setFont(new java.awt.Font("Trajan Pro 3", 2, 12)); // NOI18N
+        btnRespuesta03.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRespuesta03ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout pBackgroundLayout = new javax.swing.GroupLayout(pBackground);
+        pBackground.setLayout(pBackgroundLayout);
+        pBackgroundLayout.setHorizontalGroup(
+            pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pBackgroundLayout.createSequentialGroup()
+                .addGroup(pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(barPasion, javax.swing.GroupLayout.DEFAULT_SIZE, 237, Short.MAX_VALUE)
+                        .addComponent(barAtraccion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(barDiversion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(pBackgroundLayout.createSequentialGroup()
+                        .addComponent(btnInteractuar, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(btnJugar, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(btnRespuesta03, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
+                        .addComponent(btnRespuesta02, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnRespuesta01, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGap(100, 100, 100)
+                .addComponent(lblSprite, javax.swing.GroupLayout.DEFAULT_SIZE, 236, Short.MAX_VALUE)
+                .addGap(206, 206, 206))
         );
-        pRespuestasLayout.setVerticalGroup(
-            pRespuestasLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pRespuestasLayout.createSequentialGroup()
-                .addContainerGap()
+        pBackgroundLayout.setVerticalGroup(
+            pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pBackgroundLayout.createSequentialGroup()
+                .addComponent(barDiversion, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(barAtraccion, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(barPasion, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnRespuesta01, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnRespuesta02, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnRespuesta03, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 182, Short.MAX_VALUE)
+                .addGroup(pBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnJugar, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnInteractuar, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+            .addComponent(lblSprite, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
-        barPasion.setBackground(new java.awt.Color(255, 102, 255));
-        barPasion.setForeground(new java.awt.Color(153, 0, 153));
-        barPasion.setValue(20);
-        barPasion.setString("Pasión");
+        btnDarDiversion.setText("Dar Diversion");
+        btnDarDiversion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDarDiversionActionPerformed(evt);
+            }
+        });
 
-        lblNombre2.setFont(new java.awt.Font("Trajan Pro 3", 2, 14)); // NOI18N
-        lblNombre2.setForeground(new java.awt.Color(204, 255, 255));
-        lblNombre2.setText("Atraccion");
-
-        barAtraccion.setBackground(new java.awt.Color(0, 153, 255));
-        barAtraccion.setForeground(new java.awt.Color(102, 204, 255));
-        barAtraccion.setValue(20);
-        barAtraccion.setString("Atracción");
-
-        lblNombre3.setFont(new java.awt.Font("Trajan Pro 3", 2, 14)); // NOI18N
-        lblNombre3.setForeground(new java.awt.Color(255, 204, 204));
-        lblNombre3.setText("Pasion");
-
-        barDiversion.setBackground(new java.awt.Color(255, 153, 51));
-        barDiversion.setForeground(new java.awt.Color(255, 102, 51));
-        barDiversion.setMaximum(10);
-        barDiversion.setString("Diversión");
-
-        lblNombre4.setFont(new java.awt.Font("Trajan Pro 3", 2, 14)); // NOI18N
-        lblNombre4.setForeground(new java.awt.Color(255, 153, 102));
-        lblNombre4.setText("Diversion");
-
-        btnAtraccion.setText("Dar Atraccion");
+        btnAtraccion.setText("quitar Atraccion");
         btnAtraccion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAtraccionActionPerformed(evt);
@@ -551,38 +691,65 @@ public class app extends javax.swing.JFrame {
             }
         });
 
-        btnInteractuar.setBackground(new java.awt.Color(255, 102, 255));
-        btnInteractuar.setForeground(new java.awt.Color(102, 0, 102));
-        btnInteractuar.setText("Interactuar");
-        btnInteractuar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnInteractuarActionPerformed(evt);
-            }
-        });
-
-        txtDialogo.setBackground(new java.awt.Color(0, 153, 153));
+        txtDialogo.setBackground(new java.awt.Color(51, 51, 51));
         txtDialogo.setFont(new java.awt.Font("Gill Sans Ultra Bold", 0, 14)); // NOI18N
         txtDialogo.setForeground(new java.awt.Color(255, 255, 255));
-        txtDialogo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(51, 255, 255), 2));
+        txtDialogo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
 
-        btnDarDiversion.setText("Dar Diversion");
-        btnDarDiversion.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDarDiversionActionPerformed(evt);
-            }
-        });
+        jPanel1.setBackground(new java.awt.Color(255, 204, 255));
 
-        btnJugar.setBackground(new java.awt.Color(255, 102, 102));
-        btnJugar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnJugarActionPerformed(evt);
-            }
-        });
+        lblNombre1.setFont(new java.awt.Font("Trajan Pro 3", 3, 18)); // NOI18N
+        lblNombre1.setForeground(new java.awt.Color(153, 0, 153));
+        lblNombre1.setText("Nombre:");
+
+        lblEdad.setFont(new java.awt.Font("Trajan Pro 3", 3, 18)); // NOI18N
+        lblEdad.setForeground(new java.awt.Color(153, 0, 153));
+        lblEdad.setText("Edad:");
+
+        lblOcupacion.setFont(new java.awt.Font("Trajan Pro 3", 3, 18)); // NOI18N
+        lblOcupacion.setForeground(new java.awt.Color(153, 0, 153));
+        lblOcupacion.setText("Ocupacion:");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(lblEdad, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(lblNombre1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(lblOcupacion, javax.swing.GroupLayout.DEFAULT_SIZE, 366, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(lblNombre1)
+                .addGap(51, 51, 51)
+                .addComponent(lblEdad)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lblOcupacion, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
 
         jMenuBar1.setBackground(new java.awt.Color(153, 204, 255));
+        jMenuBar1.setBorder(null);
         jMenuBar1.setForeground(new java.awt.Color(0, 153, 153));
 
         jMenu1.setText("Archivo");
+
+        jIFullScreen.setText("FullScreen");
+        jIFullScreen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jIFullScreenActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jIFullScreen);
+
+        jINormalScreen.setText("NormalScreen");
+        jINormalScreen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jINormalScreenActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jINormalScreen);
 
         jmSalir.setText("Salir");
         jmSalir.addActionListener(new java.awt.event.ActionListener() {
@@ -601,90 +768,44 @@ public class app extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(16, 16, 16)
+            .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(barPasion, javax.swing.GroupLayout.DEFAULT_SIZE, 343, Short.MAX_VALUE)
-                        .addComponent(lblNombre3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(barDiversion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblNombre2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblNombre4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(barAtraccion, javax.swing.GroupLayout.DEFAULT_SIZE, 343, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(btnJugar, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addComponent(btnInteractuar, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(pRespuestas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                        .addComponent(btnDiversion, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(btnPassion, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(btnDarDiversion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(btnAtraccion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
-                        .addGap(1, 1, 1)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 27, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblEdad, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                            .addComponent(lblNombre1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addContainerGap())
-                        .addComponent(txtDialogo, javax.swing.GroupLayout.PREFERRED_SIZE, 454, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(pBackground, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(lblOcupacion, javax.swing.GroupLayout.PREFERRED_SIZE, 311, javax.swing.GroupLayout.PREFERRED_SIZE)))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(lblBackWall, javax.swing.GroupLayout.PREFERRED_SIZE, 867, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(pBackground, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtDialogo)
+                            .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(btnAtraccion, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
+                                    .addComponent(btnDarDiversion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(btnDiversion, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
+                                    .addComponent(btnPassion, javax.swing.GroupLayout.DEFAULT_SIZE, 111, Short.MAX_VALUE))
+                                .addGap(136, 136, 136)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(lblNombre3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(barPasion, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblNombre2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(barAtraccion, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblNombre4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(barDiversion, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(pRespuestas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addComponent(pBackground, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btnPassion, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnAtraccion, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnDiversion, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(btnDarDiversion, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnInteractuar, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(btnJugar, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(pBackground, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnAtraccion, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnDiversion, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(18, 18, 18)
-                        .addComponent(txtDialogo, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
-                .addComponent(lblNombre1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblEdad)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(lblOcupacion, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(lblBackWall, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 688, Short.MAX_VALUE))
+                        .addComponent(txtDialogo, javax.swing.GroupLayout.DEFAULT_SIZE, 156, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addGap(2, 2, 2)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
         pBackground.getAccessibleContext().setAccessibleName("");
@@ -694,62 +815,10 @@ public class app extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnRespuesta01ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRespuesta01ActionPerformed
-        if (pregunta.getIdPregunta()==1 & pregunta.getIdChica()==1){
-        enviarDialogo("ohhh!!. encerio?, me gusta",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(4));
-        darPassion(6);
-        quitarDiversion(1);
-        }
-        
-        else if (pregunta.getIdPregunta()==2 & pregunta.getIdChica()==1){
-        enviarDialogo("Mentira!!, No te creo",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(3));
-        quitarPassion(6);
-        quitarDiversion(1);
-        }
-        
-        else if (pregunta.getIdPregunta()==3 & pregunta.getIdChica()==1){
-        enviarDialogo("Wakala!!, odio el chocolate",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(3));
-        quitarPassion(6);
-        quitarDiversion(1);
-        }
-        else if (pregunta.getIdPregunta()==4 & pregunta.getIdChica()==1){
-        enviarDialogo("Que nerd, se parece a alguien que conozco.",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(4));
-        quitarPassion(6);
-        quitarDiversion(1);
-        }
-         else if (pregunta.getIdPregunta()==5 & pregunta.getIdChica()==1){
-        enviarDialogo("Nop esa no es mi edad...",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(2));
-        quitarPassion(6);
-        quitarDiversion(1);
-        }
-         else if (pregunta.getIdPregunta()==6 & pregunta.getIdChica()==1){
-        enviarDialogo("Me encanta estudiar...!!!",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(4));
-        darPassion(6);
-        quitarDiversion(1);
-        }
-        
-        
-        limipiarBotones();
-
-
-    }//GEN-LAST:event_btnRespuesta01ActionPerformed
-
     private void btnInteractuarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInteractuarActionPerformed
 
         if(barDiversion.getValue()>0){
-             pregunta = d.takePregunta(1);
+        pregunta = d.takePregunta(1);
         enviarDialogo(pregunta.getPregunta(),txtDialogo);
         lblSprite.setIcon(cargarSprite(2));
         isEnableInteraction(2);
@@ -768,7 +837,7 @@ public class app extends javax.swing.JFrame {
     }//GEN-LAST:event_btnPassionActionPerformed
 
     private void btnAtraccionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAtraccionActionPerformed
-        darAtraccion(10);
+        quitarAtraccion(10);
     }//GEN-LAST:event_btnAtraccionActionPerformed
 
     private void btnDiversionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDiversionActionPerformed
@@ -799,57 +868,137 @@ public class app extends javax.swing.JFrame {
 
     }//GEN-LAST:event_lblSpriteMouseExited
 
+    private void btnJugarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnJugarActionPerformed
+       activarMiniJuegoAbie();
+        
+ 
+       
+    }//GEN-LAST:event_btnJugarActionPerformed
+
+    private void txtMgIngresarKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtMgIngresarKeyPressed
+        if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+
+            if (strPalabra.equalsIgnoreCase(txtMgIngresar.getText())) {
+
+                    
+                    txtMgIngresar.setText("");
+
+                    if (nivel < 50) {
+                        System.out.println("Juego empezado con nivel 10");
+                        jugarMiniJuego(10);
+
+                    } else if (nivel > 50) {
+                        System.out.println("Juego empezado con nivel 20");
+                        jugarMiniJuego(20);
+                    }
+
+
+            } else {
+                enviarDialogo("Error", txtMgDialogo02);
+            }
+        }
+ 
+    }//GEN-LAST:event_txtMgIngresarKeyPressed
+
     private void btnRespuesta02ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRespuesta02ActionPerformed
         if (pregunta.getIdPregunta()==1 & pregunta.getIdChica()==1){
-        enviarDialogo("Si no lo sabes, vete de aqui!!!",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(3));
-        quitarPassion(6);
-        quitarDiversion(1);
+            enviarDialogo("Si no lo sabes, vete de aqui!!!",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(3));
+            quitarPassion(6);
+            quitarDiversion(1);
         }
-        
+
         else if (pregunta.getIdPregunta()==2 & pregunta.getIdChica()==1){
-        enviarDialogo("Ups! se nota que no lo eres.",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(4));
-        darPassion(6);
-        quitarDiversion(1);
+            enviarDialogo("Ups! se nota que no lo eres.",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(4));
+            darPassion(6);
+            quitarDiversion(1);
         }
-        
+
         else if (pregunta.getIdPregunta()==3 & pregunta.getIdChica()==1){
-        enviarDialogo("Odio la vainilla !!",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(3));
-        quitarPassion(6);
-        quitarDiversion(1);
+            enviarDialogo("Odio la vainilla !!",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(3));
+            quitarPassion(6);
+            quitarDiversion(1);
         }
-        
+
         else if (pregunta.getIdPregunta()==4 & pregunta.getIdChica()==1){
-        enviarDialogo("Amo dibujar tambien!!",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(4));
-        darPassion(6);
-        quitarDiversion(1);
+            enviarDialogo("Amo dibujar tambien!!",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(4));
+            darPassion(6);
+            quitarDiversion(1);
         }
         else if (pregunta.getIdPregunta()==5 & pregunta.getIdChica()==1){
-        enviarDialogo("Siii!! esa es mi edad",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(6));
-        darPassion(3);
-        quitarDiversion(1);
+            enviarDialogo("Siii!! esa es mi edad",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(6));
+            darPassion(3);
+            quitarDiversion(1);
         }
         else if (pregunta.getIdPregunta()==6 & pregunta.getIdChica()==1){
-        enviarDialogo("No me gusta gastar dinero inutilmente",txtDialogo);
-        isEnableInteraction(1);
-        lblSprite.setIcon(cargarSprite(4));
-        quitarPassion(6);
-        quitarDiversion(1);
+            enviarDialogo("No me gusta gastar dinero inutilmente",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(4));
+            quitarPassion(6);
+            quitarDiversion(1);
         }
         limipiarBotones();
-  
-
 
     }//GEN-LAST:event_btnRespuesta02ActionPerformed
+
+    private void btnRespuesta01ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRespuesta01ActionPerformed
+        if (pregunta.getIdPregunta()==1 & pregunta.getIdChica()==1){
+            enviarDialogo("ohhh!!. encerio?, me gusta",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(4));
+            darPassion(6);
+            quitarDiversion(1);
+        }
+
+        else if (pregunta.getIdPregunta()==2 & pregunta.getIdChica()==1){
+            enviarDialogo("Mentira!!, No te creo",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(3));
+            quitarPassion(6);
+            quitarDiversion(1);
+        }
+
+        else if (pregunta.getIdPregunta()==3 & pregunta.getIdChica()==1){
+            enviarDialogo("Wakala!!, odio el chocolate",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(3));
+            quitarPassion(6);
+            quitarDiversion(1);
+        }
+        else if (pregunta.getIdPregunta()==4 & pregunta.getIdChica()==1){
+            enviarDialogo("Que nerd, se parece a alguien que conozco.",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(4));
+            quitarPassion(6);
+            quitarDiversion(1);
+        }
+        else if (pregunta.getIdPregunta()==5 & pregunta.getIdChica()==1){
+            enviarDialogo("Nop esa no es mi edad...",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(2));
+            quitarPassion(6);
+            quitarDiversion(1);
+        }
+        else if (pregunta.getIdPregunta()==6 & pregunta.getIdChica()==1){
+            enviarDialogo("Me encanta estudiar...!!!",txtDialogo);
+            isEnableInteraction(1);
+            lblSprite.setIcon(cargarSprite(4));
+            darPassion(6);
+            quitarDiversion(1);
+        }
+
+        limipiarBotones();
+
+    }//GEN-LAST:event_btnRespuesta01ActionPerformed
 
     private void btnRespuesta03ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRespuesta03ActionPerformed
         if (pregunta.getIdPregunta() == 1 & pregunta.getIdChica() == 1) {
@@ -859,7 +1008,7 @@ public class app extends javax.swing.JFrame {
             darPassion(6);
             quitarDiversion(1);
         }
-        
+
         else if (pregunta.getIdPregunta() == 2 & pregunta.getIdChica() == 1) {
             enviarDialogo("System.out.println(quitarPassion(6)).. ",txtDialogo);
             isEnableInteraction(1);
@@ -874,7 +1023,7 @@ public class app extends javax.swing.JFrame {
             darPassion(6);
             quitarDiversion(1);
         }
-        
+
         else if (pregunta.getIdPregunta() == 4 & pregunta.getIdChica() == 1) {
             enviarDialogo("Entonces vete a jugar y sal de mi clase",txtDialogo);
             isEnableInteraction(1);
@@ -896,43 +1045,18 @@ public class app extends javax.swing.JFrame {
             quitarPassion(6);
             quitarDiversion(1);
         }
-        
+
         limipiarBotones();
     }//GEN-LAST:event_btnRespuesta03ActionPerformed
 
-    private void pRespuestasMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pRespuestasMouseExited
+    private void jIFullScreenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jIFullScreenActionPerformed
+     
+     grafica.setFullScreenWindow(this);
+    }//GEN-LAST:event_jIFullScreenActionPerformed
 
-    }//GEN-LAST:event_pRespuestasMouseExited
-
-    private void pRespuestasMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pRespuestasMouseEntered
-
-    }//GEN-LAST:event_pRespuestasMouseEntered
-
-    private void btnJugarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnJugarActionPerformed
-       activarMiniJuegoAbie();
-        
- 
-       
-    }//GEN-LAST:event_btnJugarActionPerformed
-
-    private void txtMgIngresarKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtMgIngresarKeyPressed
-        if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-            if(strPalabra.equalsIgnoreCase(txtMgIngresar.getText())){
-                try {
-                    cont++;
-                    enviarDialogo("Bien Hecho!!", txtMgDialogo02);
-                    txtMgIngresar.setText("");
-                    Thread.sleep(10);
-                    
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(app.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                
-        }else{
-                enviarDialogo("Error", txtMgDialogo02);
-            }
-        }
-    }//GEN-LAST:event_txtMgIngresarKeyPressed
+    private void jINormalScreenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jINormalScreenActionPerformed
+        this.setExtendedState(NORMAL);
+    }//GEN-LAST:event_jINormalScreenActionPerformed
 
     /**
      * @param args the command line arguments
@@ -984,22 +1108,21 @@ public class app extends javax.swing.JFrame {
     private javax.swing.JButton btnRespuesta01;
     private javax.swing.JButton btnRespuesta02;
     private javax.swing.JButton btnRespuesta03;
+    private javax.swing.JMenuItem jIFullScreen;
+    private javax.swing.JMenuItem jINormalScreen;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JMenuItem jmSalir;
-    private javax.swing.JLabel lblBackWall;
     private javax.swing.JLabel lblEdad;
+    private javax.swing.JLabel lblNivelMiniJuego;
     private javax.swing.JLabel lblNombre1;
-    private javax.swing.JLabel lblNombre2;
-    private javax.swing.JLabel lblNombre3;
-    private javax.swing.JLabel lblNombre4;
     private javax.swing.JLabel lblOcupacion;
     private javax.swing.JLabel lblSprite;
     private javax.swing.JLabel lblSprite02;
     private javax.swing.JPanel pBackground;
     private javax.swing.JFrame pMiniJuego01;
-    private javax.swing.JPanel pRespuestas;
     private javax.swing.JTextField txtDialogo;
     private javax.swing.JTextField txtMgDialogo02;
     private javax.swing.JTextField txtMgIngresar;
@@ -1038,9 +1161,24 @@ public class app extends javax.swing.JFrame {
 
         String path = "g/" + numeroAnimacion + ".gif";
         URL url = this.getClass().getResource(path);
-        Image spritenew = new ImageIcon(url).getImage().getScaledInstance(180, 500, Image.SCALE_DEFAULT);
+        Image spritenew = new ImageIcon(url).getImage().getScaledInstance(200,530, Image.SCALE_DEFAULT);
         ImageIcon sprite = new ImageIcon(spritenew);
+   
+        return sprite;
 
+        //               lblImagen.setIcon(new ImageIcon(new javax.swing.ImageIcon(getClass()
+//                        .getResource("/org/jtrans/resources/atun.jpg"))
+//                        .getImage().getScaledInstance(lblImagen.getWidth(), lblImagen.getHeight(), Image.SCALE_DEFAULT)));
+    }
+    
+    
+       private ImageIcon cargarSprite2(int numeroAnimacion,JLabel l) {
+//Devuelve con la escal por defecto de un label
+        String path = "g/" + numeroAnimacion + ".gif";
+        URL url = this.getClass().getResource(path);
+        Image spritenew = new ImageIcon(url).getImage().getScaledInstance(l.getWidth(),l.getHeight(), Image.SCALE_DEFAULT);
+        ImageIcon sprite = new ImageIcon(spritenew);
+   
         return sprite;
 
         //               lblImagen.setIcon(new ImageIcon(new javax.swing.ImageIcon(getClass()

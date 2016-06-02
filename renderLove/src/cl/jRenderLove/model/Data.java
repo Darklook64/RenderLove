@@ -227,7 +227,7 @@ public class Data {
     public AbieGame darPalabra(){
          abieGames=null;
          Random r= new Random();
-         int palabra=(int)(r.nextDouble() * 5+1);
+         int palabra=(int)(r.nextDouble() * 8+1);
          
          if(palabra==1){
              abieGames= new AbieGame();
@@ -252,6 +252,21 @@ public class Data {
              abieGames= new AbieGame();
              abieGames.setIdPalabra(5);
              abieGames.setPalabra("Estudiar");
+         
+         }else if(palabra==6){
+             abieGames= new AbieGame();
+             abieGames.setIdPalabra(6);
+             abieGames.setPalabra("Libro");
+         
+         }else if(palabra==7){
+             abieGames= new AbieGame();
+             abieGames.setIdPalabra(7);
+             abieGames.setPalabra("Amor Eterno");
+         
+         }else if(palabra==8){
+             abieGames= new AbieGame();
+             abieGames.setIdPalabra(8);
+             abieGames.setPalabra("Logaritmo");
          
          }
          
